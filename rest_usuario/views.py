@@ -8,6 +8,8 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.serializers import Serializer
 from core.models import Usuario
 from .serializers import UsuarioSerializers
+import json
+from django.http.response import JsonResponse
 @csrf_exempt
 @api_view(['GET', 'POST'])
 # Create your views here.
@@ -60,11 +62,18 @@ def loginUsuario(request, correo, password):
     else: 
         return Response({"Error": request.data},status.HTTP_404_NOT_FOUND)
 
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def editarUsuario(request, correo, password):
-    try:
+@api_view(['PUT'])
+def putUsuario(request, correo):
+    jd = json.loads(request.body)
+    usuarios = list(Usuario.objects.filter(correo=correo).values())
+    if len(usuarios)>0:
         usuario = Usuario.objects.get(correo=correo)
-    except Usuario.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        usuario.correo=jd['correo']
+        usuario.password=jd['password']
+        usuario.save()
+        datos={'message': "success"}
+    else:
+        datos={'messsage': "Usuario no encontrado"}
+    return JsonResponse(datos)
+
     
